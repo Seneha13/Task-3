@@ -1,0 +1,57 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+import zipfile
+
+
+
+# Load the dataset
+# Adjust the file path to the extracted CSV file
+car_data = pd.read_csv('C:/Users/seneh/OneDrive/Desktop/car data.csv')
+
+# Assuming 'price' is the target variable we want to predict
+X = car_data[['Driven_kms', 'Car_Name']]
+y = car_data['Selling_Price']
+
+# Splitting the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Encoding categorical variables using one-hot encoding
+# Combine training and test data to ensure consistent one-hot encoding
+combined_data = pd.concat([X_train, X_test])
+X_encoded = pd.get_dummies(combined_data, columns=['Car_Name'])
+
+# Splitting back into training and testing sets
+X_train_encoded = X_encoded[:len(X_train)]
+X_test_encoded = X_encoded[len(X_train):]
+
+# Initialize the linear regression model
+model = LinearRegression()
+
+# Train the model
+model.fit(X_train_encoded, y_train)
+
+# Make predictions on the test set
+predictions = model.predict(X_test_encoded)
+
+# Evaluate the model
+mae = mean_absolute_error(y_test, predictions)
+print(f'Mean Absolute Error: {mae}')
+
+# Example prediction for a new car listing
+# Make sure to provide values for all features used in the model
+# Example values for 'Driven_kms' and 'Car_Name'
+new_listing = [['50000', '200']]  
+# One-hot encode the new listing's features
+new_listing_encoded = pd.get_dummies(pd.DataFrame(new_listing, columns=['Driven_kms', 'Car_Name']), columns=['Car_Name'])
+# Reindex the columns to match training data
+new_listing_encoded = new_listing_encoded.reindex(columns=X_train_encoded.columns, fill_value=0)
+predicted_price = model.predict(new_listing_encoded)
+print(f'Predicted price for the new listing: ${predicted_price[0]}')
+
+
+Output:
+
+Mean Absolute Error: 1.8391767759867093
+Predicted price for the new listing: $2.415623946718738
